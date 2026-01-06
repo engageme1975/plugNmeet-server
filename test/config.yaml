@@ -148,3 +148,31 @@ analytics_settings:
   # otherwise it may fail to fetch file. This path can be NSF or other network path
   files_store_path: ./analytics
   token_validity: 30m
+
+insights:
+  enabled: false
+  providers:
+    google:
+      - id: "default-gemini-creds"
+        credentials:
+          api_key: "YOUR_GEMINI_API_KEY_HERE"
+
+    openai:
+      - id: "default-openai"
+        credentials:
+          api_key: "YOUR_OPENAI_API_KEY_HERE"
+        options:
+          endpoint: "https://api.openai.com"
+
+  services:
+    ai_text_chat:
+      provider: "openai"
+      id: "default-openai"
+      options:
+        chat_model: "gpt-3.5-turbo"
+        summarize_model: "gpt-3.5-turbo"
+        context_window: 5
+      pricing:
+        gpt-3.5-turbo:
+          input_price_per_million_tokens: 0.50
+          output_price_per_million_tokens: 1.50
