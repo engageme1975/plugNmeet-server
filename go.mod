@@ -5,7 +5,7 @@ go 1.25.5
 require (
 	buf.build/go/protovalidate v1.1.0
 	github.com/Microsoft/cognitive-services-speech-sdk-go v1.43.0
-	github.com/ansrivas/fiberprometheus/v2 v2.14.0
+	github.com/ansrivas/fiberprometheus/v2 v2.15.0
 	github.com/cavaliergopher/grab/v3 v3.0.1
 	github.com/gabriel-vasile/mimetype v1.4.12
 	github.com/go-jose/go-jose/v4 v4.1.3
@@ -19,16 +19,16 @@ require (
 	github.com/livekit/media-sdk v0.0.0-20251126100256-e9674e0bcb9e
 	github.com/livekit/protocol v1.43.4
 	github.com/livekit/server-sdk-go/v2 v2.12.8
-	github.com/mynaparrot/plugnmeet-protocol v1.1.0
+	github.com/mynaparrot/plugnmeet-protocol v1.1.1-0.20260119064013-21e7a6853a43
 	github.com/nats-io/jwt/v2 v2.8.0
 	github.com/nats-io/nats.go v1.48.0
 	github.com/nats-io/nkeys v0.4.12
 	github.com/pion/webrtc/v4 v4.1.7
 	github.com/redis/go-redis/v9 v9.17.2
-	github.com/sirupsen/logrus v1.9.3
+	github.com/sirupsen/logrus v1.9.4
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/sync v0.19.0
-	google.golang.org/genai v1.39.0
+	google.golang.org/genai v1.42.0
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/mysql v1.6.0
@@ -114,14 +114,14 @@ require (
 	github.com/stoewer/go-strcase v1.3.1 // indirect
 	github.com/twitchtv/twirp v8.1.3+incompatible // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/fasthttp v1.68.0 // indirect
+	github.com/valyala/fasthttp v1.69.0 // indirect
 	github.com/wlynxg/anet v0.0.5 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.63.0 // indirect
-	go.opentelemetry.io/otel v1.38.0 // indirect
-	go.opentelemetry.io/otel/metric v1.38.0 // indirect
-	go.opentelemetry.io/otel/trace v1.38.0 // indirect
+	go.opentelemetry.io/otel v1.39.0 // indirect
+	go.opentelemetry.io/otel/metric v1.39.0 // indirect
+	go.opentelemetry.io/otel/trace v1.39.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.1 // indirect

@@ -2,11 +2,15 @@ package helpers
 
 import "math"
 
-func round(num float64) int {
-	return int(num + math.Copysign(0.5, num))
-}
-
-func ToFixed(num float64, precision int) float64 {
-	output := math.Pow(10, float64(precision))
-	return float64(round(num*output)) / output
+func ToFixed(num float32, precision int) float32 {
+	pow := math.Pow(10, float64(precision))
+	var rounded float64
+	if num < 0 {
+		rounded = float64(num)*pow - 0.5
+	} else {
+		rounded = float64(num)*pow + 0.5
+	}
+	truncated := math.Trunc(rounded)
+	result := truncated / pow
+	return float32(result)
 }
