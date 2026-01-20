@@ -25,6 +25,7 @@ type OpenAIProvider struct {
     client  *http.Client
     baseURL string
     apiKey  string
+    disableStreaming bool
 }
 
 // NewProvider constructs the OpenAI-compatible provider.
@@ -38,13 +39,19 @@ func NewProvider(ctx context.Context, providerAccount *config.ProviderAccount, s
         base = ep
     }
 
+    disableStreaming := false
+    if ds, ok := providerAccount.Options["disable_streaming"].(bool); ok {
+        disableStreaming = ds
+    }
+
     return &OpenAIProvider{
         account: providerAccount,
         service: serviceConfig,
         logger:  log,
-        client:  &http.Client{Timeout: 30 * time.Second},
+        client: &http.Client{Timeout: 60 * time.Second},
         baseURL: base,
         apiKey:  providerAccount.Credentials.APIKey,
+        disableStreaming: disableStreaming,
     }, nil
 }
 
@@ -79,19 +86,20 @@ func (p *OpenAIProvider) AITextChatStream(ctx context.Context, chatModel string,
 			}
 		}
 
-		// Request streaming response from OpenAI-compatible endpoints.
+		// Build request body - use streaming only if not disabled
 		body := map[string]interface{}{
 			"model":    chatModel,
 			"messages": messages,
-			"stream":   true,
+			"stream":   !p.disableStreaming,
 		}
 
 		b, _ := json.Marshal(body)
+		baseURL := strings.TrimSuffix(p.baseURL, "/")
 		var path string
-		if strings.HasSuffix(p.baseURL, "/v1") {
-			path = p.baseURL + "/chat/completions"
+		if strings.HasSuffix(baseURL, "/v1") {
+			path = baseURL + "/chat/completions"
 		} else {
-			path = p.baseURL + "/v1/chat/completions"
+			path = baseURL + "/v1/chat/completions"
 		}
 		req, err := http.NewRequestWithContext(ctx, "POST", path, bytes.NewReader(b))
 		if err != nil {
@@ -114,6 +122,53 @@ func (p *OpenAIProvider) AITextChatStream(ctx context.Context, chatModel string,
 			return
 		}
 
+		streamId := fmt.Sprintf("%d", time.Now().UnixMilli())
+
+		// Handle non-streaming response
+		if p.disableStreaming {
+			var parsed struct {
+				Choices []struct {
+					Message struct {
+						Content string `json:"content"`
+					} `json:"message"`
+				} `json:"choices"`
+				Usage struct {
+					PromptTokens     uint32 `json:"prompt_tokens"`
+					CompletionTokens uint32 `json:"completion_tokens"`
+					TotalTokens      uint32 `json:"total_tokens"`
+				} `json:"usage"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
+				p.logger.WithError(err).Error("openai: failed to decode non-streaming response")
+				return
+			}
+
+			var text string
+			if len(parsed.Choices) > 0 {
+				text = parsed.Choices[0].Message.Content
+			}
+
+			// Send the full response as a single chunk
+			if text != "" {
+				resultChan <- &plugnmeet.InsightsAITextChatStreamResult{
+					Id:        streamId,
+					Text:      text,
+					CreatedAt: fmt.Sprintf("%d", time.Now().UnixMilli()),
+				}
+			}
+
+			// Send final chunk with usage info
+			resultChan <- &plugnmeet.InsightsAITextChatStreamResult{
+				Id:               streamId,
+				IsLastChunk:      true,
+				PromptTokens:     parsed.Usage.PromptTokens,
+				CompletionTokens: parsed.Usage.CompletionTokens,
+				TotalTokens:      parsed.Usage.TotalTokens,
+				CreatedAt:        fmt.Sprintf("%d", time.Now().UnixMilli()),
+			}
+			return
+		}
+
 		// Stream parsing: lines in SSE form like `data: {...}` and a final `data: [DONE]`.
 		scanner := bufio.NewScanner(resp.Body)
 		// Increase buffer size if needed
@@ -121,7 +176,6 @@ func (p *OpenAIProvider) AITextChatStream(ctx context.Context, chatModel string,
 		buf := make([]byte, 0, 64*1024)
 		scanner.Buffer(buf, maxBuf)
 
-		streamId := fmt.Sprintf("%d", time.Now().UnixMilli())
 		var usagePrompt, usageCompletion, usageTotal uint32
 
 		for scanner.Scan() {
